@@ -1,0 +1,6 @@
+{
+  "name": "web_ctf",
+  "dependencies": {
+    "ethereumjs-utils": "^5.2.5"
+  }
+}
