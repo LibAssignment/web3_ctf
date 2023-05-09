@@ -1,0 +1,4 @@
+[profile.default]
+src = "rare_skills"
+out = "out"
+libs = ["node_modules"]
