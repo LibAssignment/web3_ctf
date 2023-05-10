@@ -12,7 +12,7 @@ contract ContractBTest is Test {
 
     attacker = vm.addr(uint256(keccak256(abi.encodePacked(uint(2)))));
     vm.deal(attacker, 1 ether);
-    vm.startPrank(attacker);
+    vm.startPrank(attacker, attacker);
   }
 
   function test_run() public {
