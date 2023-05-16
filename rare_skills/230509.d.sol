@@ -7,12 +7,13 @@ contract ContractBTest is Test {
   address victim;
   address attacker;
   function setUp() public {
+    vm.prank(address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266));
     victim = address(new Security101());
     vm.deal(victim, 10000 ether);
 
-    attacker = vm.addr(uint256(keccak256(abi.encodePacked(uint(2)))));
+    attacker = address(0x70997970C51812dc3A010C7d01b50e0d17dc79C8);
     vm.deal(attacker, 1 ether);
-    vm.roll(1);
+    vm.roll(2);
     vm.startPrank(attacker, attacker);
   }
 

