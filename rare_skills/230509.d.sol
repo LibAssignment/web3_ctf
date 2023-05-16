@@ -3,7 +3,7 @@ pragma solidity ^0.8.10;
 import "forge-std/Test.sol";
 import "./230509.sol";
 
-contract ContractBTest is Test {
+contract Problem230509Test is Test {
   address victim;
   address attacker;
   function setUp() public {
@@ -18,9 +18,8 @@ contract ContractBTest is Test {
   }
 
   function test_run() public {
-    OptimizedAttackerSecurity101 attack_contract =
-      new OptimizedAttackerSecurity101{value: 1 ether}(victim);
-    // assertGt(attacker.balance, 9900 ether);
+    new OptimizedAttackerSecurity101{value: 1 ether}(victim);
+    assertGt(attacker.balance, 9900 ether);
     assertEq(victim.balance, 0 ether);
   }
 }
